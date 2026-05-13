@@ -2,21 +2,22 @@
 
 **End-to-end LLM output quality scoring system with evaluator reliability stress-testing under adversarial conditions.**
 
-> *Can we trust the systems we use to evaluate LLMs? InferenceLens finds out.*
+> *Can we trust the systems we use to evaluate LLMs? Inference-Lens finds out.*
 
 ---
 
 ## Overview
 
-As LLM-powered applications proliferate, engineering teams depend on automated evaluation pipelines to judge whether model outputs are helpful, accurate, and safe. But most evaluation frameworks assume the evaluator itself is reliable — a gap that InferenceLens directly investigates.
+As LLM-powered applications proliferate, engineering teams depend on automated evaluation pipelines to judge whether model outputs are helpful, accurate, and safe. But most evaluation frameworks assume the evaluator itself is reliable — a gap that Inference-Lens directly investigates.
 
-InferenceLens is a research-grade ML system that:
-1. **Scores LLM output quality** using human preference annotations and a suite of trained ML models
-2. **Stress-tests evaluator reliability** by exposing scoring models to adversarially constructed inputs designed to fool automated judges
-3. **Discovers latent response quality archetypes** via unsupervised clustering of 170K+ human preference pairs
-4. **Deploys a real-time scoring interface** via Streamlit for interactive LLM output evaluation
+Inference-Lens is a research-grade ML system that:
 
-This project directly extends prior work on [Multi-Agent Inference Reliability](https://kalyan-venk.github.io/agentic-llmops/), where stronger critic models were found to amplify damage in pipelines with unreliable downstream agents. InferenceLens applies the same principle to evaluation: if the judge model is miscalibrated or adversarially deceived, how much does scoring degrade — and which ML architectures are most robust?
+1. Scores LLM output quality using human preference annotations and a suite of trained ML models
+2. Stress-tests evaluator reliability by exposing scoring models to adversarially constructed inputs designed to fool automated judges
+3. Discovers latent response quality archetypes via unsupervised clustering of 170K+ human preference pairs
+4. Deploys a real-time scoring interface via Streamlit for interactive LLM output evaluation
+
+This project directly extends prior work on [Multi-Agent Inference Reliability](https://kalyan-venk.github.io/agentic-llmops/), where stronger critic models were found to amplify damage in pipelines with unreliable downstream agents. Inference-Lens applies the same principle to evaluation: if the judge model is miscalibrated or adversarially deceived, how much does scoring degrade — and which ML architectures are most robust?
 
 ---
 
@@ -29,26 +30,26 @@ This project directly extends prior work on [Multi-Agent Inference Reliability](
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      InferenceLens                       │
-├──────────────┬──────────────────┬───────────────────────┤
-│   Data Layer │  Modeling Layer  │    Evaluation Layer   │
-│              │                  │                        │
-│  HH-RLHF     │  Logistic Reg.   │  Standard Benchmark   │
-│  (170K+ pairs│  XGBoost         │  (HH-RLHF test set)   │
-│              │  DeBERTa-v3      │                        │
-│  LLM-Bar     │                  │  Adversarial Stress    │
-│  (419 adv.   │  5-fold CV +     │  Test (LLM-Bar)        │
-│   inputs)    │  Grid Search     │                        │
-└──────┬───────┴────────┬─────────┴──────────┬────────────┘
-       │                │                    │
-       ▼                ▼                    ▼
-  Feature Eng.    MLflow Tracking      Degradation
-  + Clustering    + Artifact Store     Quantification
-                       │
-                       ▼
-                 Streamlit App
-                 (Live Scoring)
++----------------------------------------------------------+
+|                      Inference-Lens                       |
++----------------+------------------+-----------------------+
+|   Data Layer   |  Modeling Layer  |   Evaluation Layer    |
+|                |                  |                        |
+|  HH-RLHF       |  Logistic Reg.   |  Standard Benchmark   |
+|  (170K+ pairs) |  XGBoost         |  (HH-RLHF test set)   |
+|                |  DeBERTa-v3      |                        |
+|  LLM-Bar       |                  |  Adversarial Stress    |
+|  (419 adv.     |  5-fold CV +     |  Test (LLM-Bar)        |
+|   inputs)      |  Grid Search     |                        |
++-------+--------+--------+---------+----------+------------+
+        |                 |                    |
+        v                 v                    v
+   Feature Eng.     MLflow Tracking      Degradation
+   + Clustering     + Artifact Store     Quantification
+                         |
+                         v
+                   Streamlit App
+                   (Live Scoring)
 ```
 
 ---
@@ -57,7 +58,7 @@ This project directly extends prior work on [Multi-Agent Inference Reliability](
 
 | Dataset | Source | Size | Role |
 |---|---|---|---|
-| Anthropic HH-RLHF | Hugging Face | 170K+ preference pairs | Training + EDA + Clustering |
+| Anthropic HH-RLHF | HuggingFace | 170K+ preference pairs | Training + EDA + Clustering |
 | LLM-Bar | GitHub (EMNLP 2023) | 419 adversarial pairs | Evaluator stress-test only |
 
 ---
@@ -74,13 +75,59 @@ This project directly extends prior work on [Multi-Agent Inference Reliability](
 - Logistic Regression (L2, interpretable baseline)
 - XGBoost (gradient-boosted ensemble, cross-validated grid search)
 - DeBERTa-v3-small (fine-tuned transformer, end-to-end text classification)
-- Metrics: AUC-ROC, F1 (macro), precision-recall, calibration plots
+- Metrics: AUC-ROC, F1 macro, precision-recall, calibration plots
 
 ### Evaluator Reliability Stress-Test (Novel Contribution)
 - All trained models applied zero-shot to LLM-Bar adversarial pairs
 - Degradation measured across 4 perturbation categories
 - False-preference rate quantified per model family
 - Cluster membership correlated with adversarial vulnerability
+
+---
+
+## Repository Structure
+
+```
+InferenceLens/
+├── src/inference_lens/       # Main Python package (src layout)
+│   ├── data/                 # Data loading and splitting (HH-RLHF + LLM-Bar)
+│   ├── features/             # Feature extraction and caching (ROUGE, BERTScore, embeddings)
+│   ├── clustering/           # Unsupervised archetype discovery
+│   ├── models/               # Supervised model training and evaluation
+│   ├── stress_test/          # Adversarial evaluator reliability experiments
+│   ├── app/                  # Streamlit scoring interface
+│   └── utils/                # Config loader, logging setup
+├── notebooks/
+│   ├── 01_eda/               # Data loading and exploratory analysis
+│   ├── 02_clustering/        # Unsupervised experiments
+│   └── 03_models/            # Supervised training and DeBERTa (Colab)
+├── configs/
+│   ├── base.yaml             # Project-wide settings and paths
+│   ├── models/               # Per-model hyperparameter configs
+│   └── clustering/           # Clustering experiment configs
+├── data/
+│   ├── raw/                  # Cached HuggingFace downloads (gitignored)
+│   └── processed/            # Feature-extracted parquet files (gitignored)
+├── reports/figures/          # Generated plots and visualizations
+├── mlruns/                   # MLflow experiment logs (gitignored)
+├── tests/                    # Unit tests
+├── pyproject.toml            # Package metadata and dependencies
+├── requirements.txt          # Pinned dependency list
+└── Makefile                  # Shortcut commands (install, lint, test)
+```
+
+---
+
+## Getting Started
+
+```bash
+git clone https://github.com/kalyan-venk/Inference-Lens.git
+cd Inference-Lens
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+Then open `notebooks/01_eda/01_data_loading.ipynb` to load the dataset and verify your setup.
 
 ---
 
@@ -97,6 +144,7 @@ All experiments are tracked with MLflow (SQLite backend):
 
 | Phase | Status |
 |---|---|
+| Project setup and structure | Done |
 | Data loading + feature engineering | In Progress |
 | EDA + visualization | Planned |
 | Unsupervised clustering | Planned |
@@ -104,24 +152,6 @@ All experiments are tracked with MLflow (SQLite backend):
 | Adversarial stress-test | Planned |
 | Streamlit app deployment | Planned |
 | Final report + writeup | Planned |
-
----
-
-## Repository Structure
-
-```
-InferenceLens/
-├── data/               # Dataset loading and preprocessing scripts
-├── features/           # Feature extraction (BERTScore, ROUGE, embeddings)
-├── clustering/         # Unsupervised learning experiments
-├── models/             # Supervised model training and evaluation
-├── stress_test/        # Adversarial evaluator reliability experiments
-├── app/                # Streamlit scoring interface
-├── mlruns/             # MLflow experiment logs
-├── notebooks/          # EDA and visualization notebooks
-├── configs/            # Experiment configuration files
-└── reports/            # Final findings and writeup
-```
 
 ---
 
@@ -148,4 +178,4 @@ Timeline: May 2026 — Present
 
 ---
 
-*InferenceLens is part of a growing body of work on inference-time reliability and evaluation robustness in LLM systems.*
+*Inference-Lens is part of a growing body of work on inference-time reliability and evaluation robustness in LLM systems.*
