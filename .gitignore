@@ -1,3 +1,17 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Virtual environment
+.venv/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -216,3 +230,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Inference-Lens: large data files
+data/raw/
+data/processed/
+*.parquet
+*.npy
+
+# MLflow artifacts
+mlruns/
+
+# Trained model checkpoints
+models/deberta_checkpoint/
+models/*.pkl
+models/*.joblib
+
+# Reports output (keep structure, ignore generated files)
+reports/figures/*.png
+reports/figures/*.pdf

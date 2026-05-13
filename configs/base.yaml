@@ -1,0 +1,31 @@
+project:
+  name: inference-lens
+  seed: 42
+
+paths:
+  data_raw: data/raw
+  data_processed: data/processed
+  mlruns: mlruns
+  reports: reports/figures
+
+data:
+  hh_rlhf:
+    subsets:
+      - helpful-base
+      - harmless-base
+    split_train: 0.70
+    split_val: 0.15
+    split_test: 0.15
+  llm_bar:
+    path: data/raw/llm_bar
+
+features:
+  embedding_model: all-MiniLM-L6-v2
+  batch_size: 64
+  features_cache: data/processed/features.parquet
+  embeddings_cache: data/processed/embeddings.npy
+  include_bertscore: false
+
+mlflow:
+  tracking_uri: mlruns
+  experiment_name: inference-lens

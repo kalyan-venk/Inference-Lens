@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inference-lens"
+version = "0.1.0"
+description = "End-to-end LLM output quality scoring with evaluator reliability stress-testing"
+authors = [{name = "Kalyan Venkatesh", email = "adavivenkatesh@gmail.com"}]
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=2.18.0",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "pyarrow>=15.0.0",
+    "transformers>=4.40.0",
+    "sentence-transformers>=2.7.0",
+    "rouge-score>=0.1.2",
+    "bert-score>=0.3.13",
+    "textstat>=0.7.3",
+    "scikit-learn>=1.4.0",
+    "xgboost>=2.0.0",
+    "torch>=2.2.0",
+    "mlflow>=2.12.0",
+    "streamlit>=1.33.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "umap-learn>=0.5.6",
+    "plotly>=5.20.0",
+    "pyyaml>=6.0.1",
+    "tqdm>=4.66.0",
+    "loguru>=0.7.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+    "ipykernel>=6.29.0",
+    "jupyter>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
