@@ -1,9 +1,9 @@
 """
 Data loading for Inference-Lens.
 
-Two sources land here:
-  HH-RLHF  — 170K+ human preference pairs from Anthropic (HuggingFace)
-  LLM-Bar  — 419 adversarial evaluator stress-test pairs (EMNLP 2023)
+Two sources live here:
+  HH-RLHF  -- 170K+ human preference pairs from Anthropic (HuggingFace)
+  LLM-Bar  -- 419 adversarial evaluator stress-test pairs (EMNLP 2023)
 
 HH-RLHF is used for training, EDA, and clustering.
 LLM-Bar is held out completely and used only for the stress-test phase.
@@ -23,15 +23,33 @@ HH_RLHF_SUBSETS = ("helpful-base", "harmless-base")
 LLM_BAR_CATEGORIES = ("neighbor", "natural", "gpt4_generated", "manual")
 
 
+def extract_assistant_response(conversation: str) -> str:
+    """Pull out the final assistant turn from a full HH-RLHF conversation string.
+
+    HH-RLHF stores the entire conversation in each field, formatted like:
+        \\n\\nHuman: <question>\\n\\nAssistant: <response>
+
+    Multi-turn conversations follow the same pattern, just repeated. We want
+    the last assistant response, since that's what the human was actually judging.
+    Returns the full conversation string unchanged if no assistant turn is found.
+    """
+    marker = "\n\nAssistant:"
+    idx = conversation.rfind(marker)
+    if idx == -1:
+        logger.warning("No assistant turn found in conversation, returning full text.")
+        return conversation
+    return conversation[idx + len(marker):].strip()
+
+
 def load_hh_rlhf(
     cache_dir: str | Path = "data/raw",
     subsets: tuple[str, ...] = HH_RLHF_SUBSETS,
 ) -> dict:
     """Stream HH-RLHF from HuggingFace and cache locally.
 
-    Returns a dict keyed by subset name, each value is a HuggingFace DatasetDict
+    Returns a dict keyed by subset name. Each value is a HuggingFace DatasetDict
     with train and test splits as provided by the source.
-    Call flatten_hh_rlhf() to convert to a single DataFrame.
+    Call flatten_hh_rlhf() to convert to a usable DataFrame.
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -51,19 +69,23 @@ def load_hh_rlhf(
 def flatten_hh_rlhf(datasets: dict) -> pd.DataFrame:
     """Flatten HH-RLHF DatasetDicts into a single DataFrame.
 
-    Each row represents one preference comparison with columns:
-      chosen         — the preferred response (label = 1)
-      rejected       — the rejected response  (label = 0)
-      subset         — helpful-base or harmless-base
-      original_split — train or test (from the source dataset)
+    Each row is one preference comparison. Columns:
+      chosen_response    the final assistant turn from the preferred conversation
+      rejected_response  the final assistant turn from the rejected conversation
+      chosen_full        full conversation text (kept for context if needed)
+      rejected_full      full conversation text (kept for context if needed)
+      subset             helpful-base or harmless-base
+      original_split     train or test (as labeled by the source dataset)
     """
     rows = []
     for subset, ds in datasets.items():
         for split in ("train", "test"):
             for example in ds[split]:
                 rows.append({
-                    "chosen": example["chosen"],
-                    "rejected": example["rejected"],
+                    "chosen_response": extract_assistant_response(example["chosen"]),
+                    "rejected_response": extract_assistant_response(example["rejected"]),
+                    "chosen_full": example["chosen"],
+                    "rejected_full": example["rejected"],
                     "subset": subset,
                     "original_split": split,
                 })
@@ -81,9 +103,8 @@ def split_dataframe(
 ) -> dict[str, pd.DataFrame]:
     """Deterministic train/val/test split.
 
-    Shuffles once with a fixed seed so every experiment sees the same split.
-    Stratification is not applied here since class balance is verified
-    separately in the EDA phase.
+    Shuffles once with a fixed seed so every experiment sees the same data.
+    Stratification is skipped here and verified separately in EDA.
     """
     assert abs(train + val + test - 1.0) < 1e-6, "Splits must sum to 1.0"
 
@@ -105,17 +126,12 @@ def split_dataframe(
 def load_llm_bar(path: str | Path = "data/raw/llm_bar") -> pd.DataFrame:
     """Load LLM-Bar adversarial pairs from local path.
 
-    LLM-Bar must be downloaded manually from:
-    https://github.com/llm-bar/LLMBar
-
-    Expected structure inside path:
+    LLM-Bar must be downloaded manually from https://github.com/llm-bar/LLMBar
+    and placed at data/raw/llm_bar/. Expected files:
       neighbor.json, natural.json, gpt4_generated.json, manual.json
 
-    Each JSON file contains a list of dicts with keys:
-      input, output1, output2, label
-
-    Returns a DataFrame with an added 'category' column identifying
-    which perturbation type each pair belongs to.
+    Each file has a list of dicts with keys: input, output1, output2, label.
+    Returns a single DataFrame with a 'category' column added.
     """
     path = Path(path)
     if not path.exists():
@@ -136,5 +152,5 @@ def load_llm_bar(path: str | Path = "data/raw/llm_bar") -> pd.DataFrame:
             rows.append({**item, "category": category})
 
     df = pd.DataFrame(rows)
-    logger.info("Loaded LLM-Bar: %d adversarial pairs across %d categories", len(df), df["category"].nunique())
+    logger.info("Loaded LLM-Bar: %d pairs across %d categories", len(df), df["category"].nunique())
     return df

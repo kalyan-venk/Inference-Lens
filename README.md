@@ -145,8 +145,9 @@ All experiments are tracked with MLflow (SQLite backend):
 | Phase | Status |
 |---|---|
 | Project setup and structure | Done |
-| Data loading + feature engineering | In Progress |
-| EDA + visualization | Planned |
+| Data loading + response extraction | Done |
+| Feature extraction (lexical, ROUGE-L, embeddings) | Done |
+| EDA + visualization | Done |
 | Unsupervised clustering | Planned |
 | Supervised model training + evaluation | Planned |
 | Adversarial stress-test | Planned |
