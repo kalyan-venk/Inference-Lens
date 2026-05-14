@@ -148,7 +148,7 @@ All experiments are tracked with MLflow (SQLite backend):
 | Data loading + response extraction | Done |
 | Feature extraction (lexical, ROUGE-L, embeddings) | Done |
 | EDA + visualization | Done |
-| Unsupervised clustering | Planned |
+| Unsupervised clustering (K-Means, DBSCAN, Hierarchical, archetype analysis) | Done |
 | Supervised model training + evaluation | Planned |
 | Adversarial stress-test | Planned |
 | Streamlit app deployment | Planned |
