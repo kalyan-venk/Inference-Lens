@@ -127,7 +127,37 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Then open `notebooks/01_eda/01_data_loading.ipynb` to load the dataset and verify your setup.
+### Run order
+
+```
+# Week 1 -- data and features
+notebooks/01_eda/01_data_loading.ipynb
+notebooks/01_eda/02_feature_extraction.ipynb
+notebooks/01_eda/03_eda_visualization.ipynb
+
+# Week 2 -- clustering
+notebooks/02_clustering/01_kmeans.ipynb
+notebooks/02_clustering/02_advanced_clustering.ipynb
+notebooks/02_clustering/03_archetype_analysis.ipynb
+
+# Week 3 -- models and stress-test
+python scripts/setup_mlflow.py
+notebooks/03_models/01_logreg_xgboost.ipynb
+# Run notebooks/03_models/02_deberta_colab.ipynb on Google Colab (GPU required)
+# Download checkpoint to models/deberta_checkpoint/ before continuing
+notebooks/03_models/03_model_comparison.ipynb
+notebooks/03_models/04_stress_test.ipynb
+
+# Week 4 -- app
+streamlit run src/inference_lens/app/main.py
+```
+
+### MLflow UI
+
+```bash
+mlflow ui --backend-store-uri mlruns
+# open http://localhost:5000
+```
 
 ---
 
@@ -151,7 +181,8 @@ All experiments are tracked with MLflow (SQLite backend):
 | Unsupervised clustering (K-Means, DBSCAN, Hierarchical, archetype analysis) | Done |
 | Supervised model training + evaluation (LogReg, XGBoost, DeBERTa) | Done |
 | Adversarial stress-test (LLM-Bar, per-category degradation, false-preference rate) | Done |
-| Streamlit app deployment | Planned |
+| Streamlit scoring app | Done |
+| MLflow experiment tracking | Done |
 | Final report + writeup | Planned |
 
 ---
