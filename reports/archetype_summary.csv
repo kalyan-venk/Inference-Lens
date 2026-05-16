@@ -1,0 +1,5 @@
+kmeans_cluster,size,pct_chosen,avg_token_length,avg_ttr,avg_flesch,avg_rouge_l,pct_chosen_pct,archetype
+2,18192,0.516,42.475,0.863,72.703,1.0,51.6,conversational-engaging
+1,70397,0.503,39.069,0.869,70.003,0.999,50.3,medium-length-mixed
+0,43289,0.501,16.688,0.941,85.428,0.997,50.1,ultra-short-minimal
+3,50198,0.489,47.968,0.841,74.86,1.0,48.9,verbose-inconsistent
